@@ -439,7 +439,7 @@ body {
 .footer .nav-logo { justify-content: center; margin-bottom: 0.75rem; display: flex; }
 .footer-note { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.4rem; }
 .footer-legal { color: var(--text-dim); font-size: 0.75rem; }
-.footer-brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 0.75rem; }
+.footer-rights { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 0.75rem; font-size: 0.7rem; }
 
 /* ── LOADING STATE SKELETON ── */
 .skeleton-card {
