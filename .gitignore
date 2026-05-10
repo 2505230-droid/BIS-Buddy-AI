@@ -1,10 +1,13 @@
-# API keys — never commit these
-config.js
- 
-# OS files
+# Environment variables — never commit these
+.env
+.env.local
+.env*.local
+
+# OS
 .DS_Store
 Thumbs.db
- 
+
 # Editor
 .vscode/
 *.log
+node_modules/

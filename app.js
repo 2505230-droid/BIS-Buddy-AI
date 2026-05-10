@@ -1,41 +1,32 @@
 /**
  * StandardsAI — app.js
  * BIS Standards Recommendation Engine
- * RAG Pipeline: Groq (LLaMA 3.3 70B) + Local TF-IDF Retrieval
  *
- * WHY GROQ:
- *  ✅ 100% Free — no credit card, no billing, ever
- *  ✅ CORS-enabled — works directly from browser / local HTML file
- *  ✅ LLaMA 3.3 70B Versatile — production-grade open-source model
- *  ✅ 300+ tokens/sec — fastest free LLM API available
- *  ✅ 1M tokens/day free limit — more than enough for hackathon
+ * RAG Pipeline: Groq LLaMA 3.3 70B (via Vercel proxy) + Local TF-IDF Retrieval
  *
- * Architecture:
- *  1. User describes product in plain language
- *  2. Local TF-IDF retrieval finds top-K BIS standards (simulates HuggingFace + Pinecone)
- *  3. Groq receives ONLY retrieved standards — grounded, zero hallucination
- *  4. Structured JSON output: IS number, title, relevance, rationale, tags
- *
- * Get free key: https://console.groq.com/keys (no credit card)
+ * How it works:
+ *  1. User describes product — no login, no API key, just type and go
+ *  2. Local TF-IDF retrieval finds top-K BIS standards from embedded catalog
+ *     (Production: replace with HuggingFace BAAI/bge-small-en-v1.5 + Pinecone)
+ *  3. /api/chat proxy (Vercel edge function) forwards to Groq — key stays secret
+ *  4. LLaMA 3.3 70B returns grounded JSON — only retrieved docs, no hallucination
  */
 
 const app = (() => {
 
   // ─── STATE ───────────────────────────────────────────────────────────────
-  let groqKey    = (typeof CONFIG_KEYS !== 'undefined' && CONFIG_KEYS.GROQ_API_KEY) ? CONFIG_KEYS.GROQ_API_KEY : sessionStorage.getItem('groq_key') || '';
   let lastResults = null;
   let isLoading   = false;
 
   // ─── CONFIG ───────────────────────────────────────────────────────────────
   const CONFIG = {
-    endpoint : 'https://api.groq.com/openai/v1/chat/completions',
-    model    : 'llama-3.3-70b-versatile',   // Best free model on Groq
+    // Calls your own Vercel proxy — key never exposed to browser
+    endpoint : '/api/chat',
+    model    : 'llama-3.3-70b-versatile',
     maxTokens: 2048,
   };
 
-  // ─── BIS KNOWLEDGE BASE (Embedded Catalog Subset) ────────────────────────
-  // In production this lives in Pinecone, retrieved via vector similarity.
-  // This static subset enables zero-backend demo mode for the hackathon.
+  // ─── BIS KNOWLEDGE BASE ───────────────────────────────────────────────────
   const BIS_CATALOG = [
     { is: 'IS 1367',     title: 'Technical Supply Conditions for Threaded Steel Fasteners',                    scope: 'Bolts, screws, nuts, washers — mechanical properties, dimensions, materials for steel fasteners used in general engineering.' },
     { is: 'IS 2062',     title: 'Hot Rolled Medium and High Tensile Structural Steel',                         scope: 'Structural steel plates, strips, sheets, sections, flats for general structural purposes in bridges, buildings, machinery.' },
@@ -92,13 +83,6 @@ const app = (() => {
 
   // ─── INIT ─────────────────────────────────────────────────────────────────
   function init() {
-    // Auto-load key from config.js (hardcoded) or sessionStorage fallback
-    if (groqKey) {
-      showKeyStatus('✓ API key loaded from config', 'ok');
-      // Hide the key input row entirely since key is pre-configured
-      const row = document.getElementById('apiKeyRow');
-      if (row) row.style.display = 'none';
-    }
     window.addEventListener('scroll', () => {
       document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
     });
@@ -130,25 +114,6 @@ const app = (() => {
     }, 2500);
   }
 
-  // ─── KEY MANAGEMENT ───────────────────────────────────────────────────────
-  function saveKey() {
-    const val = document.getElementById('apiKeyInput').value.trim();
-    if (!val.startsWith('gsk_') || val.length < 20) {
-      showKeyStatus('Invalid key — Groq keys start with "gsk_"', 'err');
-      return;
-    }
-    groqKey = val;
-    sessionStorage.setItem('groq_key', val);
-    showKeyStatus('✓ API key saved for this session', 'ok');
-  }
-
-  function showKeyStatus(msg, type) {
-    const el = document.getElementById('keyStatus');
-    if (!el) return;
-    el.textContent = msg;
-    el.className = `key-status ${type}`;
-  }
-
   // ─── EXAMPLE FILLER ───────────────────────────────────────────────────────
   function fillExample(text) {
     const ta = document.getElementById('productInput');
@@ -158,13 +123,10 @@ const app = (() => {
     document.getElementById('demo').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // ─── LOCAL RETRIEVAL (TF-IDF keyword overlap) ─────────────────────────────
-  // Simulates HuggingFace BAAI/bge-small-en-v1.5 + Pinecone vector search.
-  // Replace with actual embedding + vector DB calls in production.
+  // ─── LOCAL RETRIEVAL (TF-IDF) ─────────────────────────────────────────────
   function localRetrieve(query, category, k = 10) {
     const stopWords = new Set(['for','the','in','a','an','to','of','and','or','with','is','are','that','this','by','on','at','be','as','from','my','i','its','it','we','you','sold','used','use','build','make','manufacture','india']);
     const tokens = tokenize(query + ' ' + category).filter(t => !stopWords.has(t));
-
     return BIS_CATALOG
       .map(std => {
         const corpus = tokenize(std.title + ' ' + std.scope);
@@ -185,10 +147,8 @@ const app = (() => {
     return text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
   }
 
-  // ─── CORE: GROQ API CALL ──────────────────────────────────────────────────
-  async function callGroq(productDescription, category, retrievedDocs) {
-    if (!groqKey) throw new Error('Please enter your Groq API key first.');
-
+  // ─── CORE: CALL VERCEL PROXY ──────────────────────────────────────────────
+  async function callLLM(productDescription, category, retrievedDocs) {
     const contextBlock = retrievedDocs.map((d, i) =>
       `[DOC ${i+1}]\nIS Number: ${d.is}\nTitle: ${d.title}\nScope: ${d.scope}`
     ).join('\n\n');
@@ -198,12 +158,12 @@ const app = (() => {
 TASK: Analyse the product description and return the most applicable BIS standards from the CONTEXT DOCUMENTS ONLY.
 
 STRICT RULES:
-1. ONLY use IS numbers and titles that appear verbatim in the CONTEXT DOCUMENTS. Never invent or hallucinate standards.
+1. ONLY use IS numbers and titles that appear verbatim in the CONTEXT DOCUMENTS. Never invent standards.
 2. Return EXACTLY 3 to 5 recommendations ranked by relevance (most relevant first).
 3. Output ONLY a valid JSON array — no preamble, no markdown fences, no explanation outside the JSON.
 4. Write rationale in plain English for a non-technical business owner.
 
-OUTPUT FORMAT — return this exact structure:
+OUTPUT FORMAT:
 [
   {
     "rank": 1,
@@ -219,18 +179,15 @@ OUTPUT FORMAT — return this exact structure:
     const userPrompt = `PRODUCT DESCRIPTION: "${productDescription}"
 PRODUCT CATEGORY: ${category || 'Auto-detect from description'}
 
-CONTEXT DOCUMENTS (use ONLY these — do not invent any IS number not listed here):
+CONTEXT DOCUMENTS (use ONLY these):
 ${contextBlock}
 
-Return the JSON array only. No other text.`;
+Return the JSON array only.`;
 
     const response = await fetch(CONFIG.endpoint, {
       method : 'POST',
-      headers: {
-        'Content-Type' : 'application/json',
-        'Authorization': `Bearer ${groqKey}`,
-      },
-      body: JSON.stringify({
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({
         model      : CONFIG.model,
         max_tokens : CONFIG.maxTokens,
         temperature: 0.1,
@@ -243,41 +200,33 @@ Return the JSON array only. No other text.`;
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      const msg = err?.error?.message || `HTTP ${response.status}`;
-      throw new Error(`Groq API error: ${msg}`);
+      throw new Error(err?.error?.message || `Server error: HTTP ${response.status}`);
     }
 
     const data = await response.json();
     const raw  = data?.choices?.[0]?.message?.content;
-    if (!raw) throw new Error('Empty response from Groq API.');
+    if (!raw) throw new Error('Empty response. Please try again.');
 
-    // Strip markdown fences and extract JSON array
     const cleaned = raw.replace(/```json|```/g, '').trim();
     const match   = cleaned.match(/\[[\s\S]*\]/);
-    if (!match) throw new Error('Could not find JSON array in model response. Please try again.');
+    if (!match) throw new Error('Could not parse response. Please try again.');
     try {
       const parsed = JSON.parse(match[0]);
-      if (!Array.isArray(parsed)) throw new Error('Expected JSON array from model.');
+      if (!Array.isArray(parsed)) throw new Error('Unexpected response format.');
       return parsed;
     } catch {
-      throw new Error('Could not parse model output as JSON. Please try again.');
+      throw new Error('Could not parse model output. Please try again.');
     }
   }
 
   // ─── MAIN: ANALYZE ────────────────────────────────────────────────────────
   async function analyze() {
     if (isLoading) return;
-
     const description = document.getElementById('productInput').value.trim();
     const category    = document.getElementById('categorySelect').value;
 
     if (!description || description.length < 10) {
       showError('Please enter a product description of at least 10 characters.');
-      return;
-    }
-    if (!groqKey) {
-      showError('Please enter and save your Groq API key. Get one free at console.groq.com/keys — no credit card needed.');
-      document.getElementById('apiKeyInput').focus();
       return;
     }
 
@@ -286,18 +235,15 @@ Return the JSON array only. No other text.`;
     showSkeletonResults();
 
     const t0 = performance.now();
-
     try {
       const retrieved = localRetrieve(description, category, 10);
       if (retrieved.length === 0) {
-        throw new Error('No relevant BIS standards found for this product. Try a more specific description.');
+        throw new Error('No relevant BIS standards found. Try a more specific description.');
       }
-
-      const results = await callGroq(description, category, retrieved);
+      const results = await callLLM(description, category, retrieved);
       const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
       lastResults   = { description, category, results, elapsed, timestamp: new Date().toISOString() };
       renderResults(results, elapsed);
-
     } catch (err) {
       hideSkeletonResults();
       showError(err.message || 'An unexpected error occurred.');
@@ -339,9 +285,7 @@ Return the JSON array only. No other text.`;
     const wrapper = document.getElementById('resultsWrapper');
     const list    = document.getElementById('resultsList');
     const meta    = document.getElementById('resultsMeta');
-
     meta.textContent = `${results.length} standards found · ${elapsed}s`;
-
     list.innerHTML = results.map((r, i) => {
       const score  = typeof r.relevance_score === 'number' ? r.relevance_score : 75;
       const tags   = Array.isArray(r.key_aspects) ? r.key_aspects : [];
@@ -365,7 +309,6 @@ Return the JSON array only. No other text.`;
           ${tags.length ? `<div class="result-tags">${tags.map(t => `<span class="result-tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
         </div>`;
     }).join('');
-
     wrapper.style.display = 'block';
     wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -387,7 +330,6 @@ Return the JSON array only. No other text.`;
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // ─── EXPORT ───────────────────────────────────────────────────────────────
   function exportResults() {
     if (!lastResults) return;
     const blob = new Blob([JSON.stringify(lastResults, null, 2)], { type: 'application/json' });
@@ -397,7 +339,7 @@ Return the JSON array only. No other text.`;
     URL.revokeObjectURL(url);
   }
 
-  return { init, saveKey, analyze, fillExample, exportResults };
+  return { init, analyze, fillExample, exportResults };
 })();
 
 document.addEventListener('DOMContentLoaded', app.init);
