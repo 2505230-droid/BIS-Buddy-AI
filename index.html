@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BIS Buddy — BIS Compliance Intelligence</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="shortcut icon" href="https://indinatus.com/assets/img/BIS-certification-india.jpg" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="bg-grid"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- NAV -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <span class="logo-mark">BB</span>
+        <span class="logo-text">BIS Buddy <span class="accent">AI</span></span>
+      </a>
+      <div class="nav-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#tech-stack">Tech Stack</a>
+      </div>
+      <div class="nav-cta">
+        
+        <a href="#demo" class="btn-nav">Try Now →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-eyebrow">
+      <span class="dot-pulse"></span>
+      <span>AI-Powered BIS Compliance Engine · RAG System</span>
+    </div>
+    <h1 class="hero-title">
+      Find the right<br />
+      <span class="title-highlight">BIS Standard</span><br />
+      in <span class="title-counter" id="counter">seconds</span>
+    </h1>
+    <p class="hero-sub">
+      Stop spending weeks browsing PDFs and interpreting technical jargon.<br />
+      Describe your product in plain language — our AI buddy handles the rest.
+    </p>
+    <div class="hero-cta-group">
+      <a href="#demo" class="btn-primary">Start for free <span class="arrow">↓</span></a>
+      <a href="#how-it-works" class="btn-ghost">See how it works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-num">10,000+</span>
+        <span class="stat-label">BIS Standards Indexed</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num">&lt; 3s</span>
+        <span class="stat-label">Avg. Response Time</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num">Top 5</span>
+        <span class="stat-label">Ranked Recommendations</span>
+      </div>
+    </div>
+  </section>
+
+  
+
+  <!-- HOW IT WORKS -->
+  <section class="how-section" id="how-it-works">
+    <div class="section-inner">
+      <div class="section-label">WORKING STRATEGY</div>
+      <h2 class="section-title">A <span class="accent">RAG pipeline</span> built for accuracy</h2>
+      <div class="flow-track">
+        <div class="flow-step">
+          <div class="step-num">01</div>
+          <div class="step-body">
+            <h3>Product Description Input</h3>
+            <p>User describes their product in plain language — no technical jargon required.</p>
+            <div class="step-tag">Natural Language</div>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">02</div>
+          <div class="step-body">
+            <h3>Semantic Embedding</h3>
+            <p>HuggingFace <code>BAAI/bge-small-en-v1.5</code> converts the query into a dense vector capturing meaning, not just keywords.</p>
+            <div class="step-tag">HuggingFace API</div>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">03</div>
+          <div class="step-body">
+            <h3>Vector Similarity Search</h3>
+            <p>Pinecone (serverless free tier) retrieves the top-K most semantically similar BIS standard chunks.</p>
+            <div class="step-tag">Pinecone DB</div>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">04</div>
+          <div class="step-body">
+            <h3>Grounded Generation</h3>
+            <p>LLaMA 3.3 70B receives only retrieved standards as context — grounded generation prevents hallucinated IS numbers.</p>
+            <div class="step-tag">Groq API </div>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step step-final">
+          <div class="step-num">05</div>
+          <div class="step-body">
+            <h3>Ranked Results + Rationale</h3>
+            <p>Top 3–5 BIS standards returned with IS number, title, relevance score, and plain-English rationale.</p>
+            <div class="step-tag">Structured Output</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEMO SECTION -->
+  <section class="demo-section" id="demo">
+    <div class="section-inner">
+      <div class="section-label">Live Demo</div>
+      <h2 class="section-title">Describe your product breifly, <span class="accent">get standards instantly</span></h2>
+      <p class="demo-sub">API key is pre-configured. Just describe your product and click the button — results in seconds.</p>
+
+      <div class="demo-card">
+        <!-- API Key Input -->
+        <div class="api-key-row" id="apiKeyRow">
+          <div class="api-key-label">
+            <span class="key-icon">🔑</span>
+            <span>Groq API Key <a href="https://console.groq.com/keys" target="_blank" class="get-key-link">Get free key (no card) →</a></span>
+          </div>
+          <div class="api-key-input-wrap">
+            <input type="password" id="apiKeyInput" placeholder="gsk_..." class="api-key-field" />
+            <button class="btn-save-key" id="saveKeyBtn" onclick="app.saveKey()">Save Key</button>
+          </div>
+          <div class="key-status" id="keyStatus"></div>
+        </div>
+
+        <!-- Prompt area -->
+        <div class="input-block">
+          <label class="input-label">Product Description</label>
+          <div class="textarea-wrap">
+            <textarea
+              id="productInput"
+              class="product-textarea"
+              rows="4"
+              placeholder="e.g. I manufacture LED light bulbs for household use, 9W, E27 base, sold in India..."
+            ></textarea>
+            <div class="char-count" id="charCount">0 / 500</div>
+          </div>
+          <div class="example-chips">
+            <span class="chips-label">Try an example:</span>
+            <button class="chip" onclick="app.fillExample('Steel reinforcement bars used in concrete construction for building residential structures')">Steel rebar</button>
+            <button class="chip" onclick="app.fillExample('Packaged drinking water bottles, 1 litre PET, for retail sale in Indian market')">Packaged water</button>
+            <button class="chip" onclick="app.fillExample('Electric ceiling fan with 1200mm blade sweep, BLDC motor, for domestic use')">Ceiling fan</button>
+            <button class="chip" onclick="app.fillExample('Ayurvedic herbal face cream with turmeric and neem, cosmetic product for skin care')">Herbal cosmetic</button>
+          </div>
+        </div>
+
+        <!-- Category selector -->
+        <div class="input-block">
+          <label class="input-label">Product Category <span class="optional">(optional — improves precision)</span></label>
+          <div class="select-wrap">
+            <select id="categorySelect" class="category-select">
+              <option value="">Auto-detect</option>
+              <option value="electrical">Electrical &amp; Electronics</option>
+              <option value="construction">Construction Materials</option>
+              <option value="food">Food &amp; Beverages</option>
+              <option value="textile">Textiles &amp; Apparel</option>
+              <option value="chemical">Chemicals &amp; Plastics</option>
+              <option value="mechanical">Mechanical &amp; Engineering</option>
+              <option value="medical">Medical Devices</option>
+              <option value="automotive">Automotive Parts</option>
+              <option value="cosmetics">Cosmetics &amp; Personal Care</option>
+              <option value="packaging">Packaging Materials</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn-analyze" id="analyzeBtn" onclick="app.analyze()">
+          <span class="btn-inner">
+            <span class="btn-icon">⚡</span>
+            <span class="btn-text">Find Applicable BIS Standards</span>
+          </span>
+          <span class="btn-loader" id="btnLoader" style="display:none">
+            <span class="spinner"></span> Analyzing...
+          </span>
+        </button>
+      </div>
+
+      <!-- Results -->
+      <div class="results-wrapper" id="resultsWrapper" style="display:none">
+        <div class="results-header">
+          <div class="results-title">
+            <span class="results-icon">📋</span>
+            Recommended BIS Standards
+          </div>
+          <div class="results-meta" id="resultsMeta"></div>
+        </div>
+        <div class="results-list" id="resultsList"></div>
+        <div class="results-footer">
+          <div class="disclaimer">
+            <span>⚠️</span>
+            <span>AI-generated recommendations. Always verify against the official <a href="https://www.bis.gov.in" target="_blank">BIS Portal</a> before regulatory submission.</span>
+          </div>
+          <button class="btn-export" onclick="app.exportResults()">Export as JSON</button>
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div class="error-card" id="errorCard" style="display:none">
+        <span class="error-icon">⚠️</span>
+        <div>
+          <strong>Something went wrong</strong>
+          <p id="errorMsg"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section class="tech-section" id="tech-stack">
+    <div class="section-inner">
+      <div class="section-label">Architecture</div>
+      <h2 class="section-title">Built with <span class="accent">High Performing</span> production APIs</h2>
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-logo gem">◆</div>
+          <h3>Groq — LLaMA 3.3 70B Versatile</h3>
+          <p>100% free, no credit card. CORS-enabled browser API. LLaMA 3.3 70B at 300+ tokens/sec — fastest free LLM available. 1M tokens/day free.</p>
+          <div class="tech-badge">100% Free · No Card · CORS ✓</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-logo hf">🤗</div>
+          <h3>HuggingFace Inference</h3>
+          <p><code>BAAI/bge-small-en-v1.5</code> — maps vague product descriptions to technical regulatory vocabulary via dense embeddings.</p>
+          <div class="tech-badge">Free Tier · Embeddings</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-logo pine">⬡</div>
+          <h3>Pinecone Serverless</h3>
+          <p>Cloud vector DB. Stores the entire BIS catalog index. Sub-50ms similarity search across 20,000+ embedded standards.</p>
+          <div class="tech-badge">Free Tier · Vector Search</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-logo bis">📐</div>
+          <h3>BIS Portal + API Setu</h3>
+          <p>Scraped IS numbers, titles, and scope metadata. PyMuPDF used for PDF text extraction where available.</p>
+          <div class="tech-badge">Open Data · Source</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="logo-mark">BB</span>
+        <span class="logo-text">Standards<span class="accent">AI</span></span>
+      </div>
+      <div class="footer-note">Built for India's MSE community · RAG-powered BIS compliance</div>
+      <div class="footer-legal">Not affiliated with Bureau of Indian Standards. For reference only.</div>
+      <div class="footer-rights">All rights reserved by TechNova</div>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
